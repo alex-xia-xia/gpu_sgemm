@@ -1,8 +1,10 @@
 This is a simple demo about how to optimize the gemm on Nvidia gpu platform with using sass level optimization trick.
-Content:
+Contents:
+
     1.Sample extracted from cublas library
-    2.C example
-    3.SASS of C example
+    2.CUBLAS C example
+    3.C handwrite example
+    3.SASS handwrite example
 
 Enviroment: 
 
