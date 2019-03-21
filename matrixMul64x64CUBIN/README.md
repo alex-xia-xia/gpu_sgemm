@@ -1,3 +1,5 @@
+This is an example for cublas 64x64 sass kernel. We extract specific kernel sass, and modify some parameter address, then use the miniPascalAs to insert sass code into the cubin files. It works.
+
 1. Compile cu file to cubin file
 	
 	nvcc -arch=compute_61 -code=sm_61 matrix_kernel.cu -cubin -o matrix_kernel.cubin
