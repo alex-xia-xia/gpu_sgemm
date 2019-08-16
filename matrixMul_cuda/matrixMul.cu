@@ -169,29 +169,29 @@ __global__ void
 sgemm_kernel_64(float *C, float *A, float *B, int hA, int wA, int wB)
 {
 	__shared__ float4 smem[2*64 * 2 * 2];
-    float c[64] = {0.0f};//thread register initialized zero    
+	float c[64] = {0.0f};//thread register initialized zero    
 	float4 a1[2], b1[2];	// registers for 1st prefetch from global memory
 	//float2 a1[4], b1[4];
 	float4 a2[2][2], b2[2][2];	// registers for 2nd prefetch from shared memory
     
 	// Block index
-    int bx = blockIdx.x;
-    int by = blockIdx.y;
+	int bx = blockIdx.x;
+	int by = blockIdx.y;
 
-    // Thread index
-    int tid = threadIdx.x;
+	// Thread index
+	int tid = threadIdx.x;
 	//int tid_x = tid & 0x7;
 	//int tid_y = tid / 8;
 	int tid15 = (tid & 15);
 	int tid4 = (tid >> 4);
 
-    int aBegin = 64 * by;  
-    //int aEnd   = aBegin + hA*(wA - 1); 
-    int aStep  = 8 * hA;  
+ 	int aBegin = 64 * by;  
+	//int aEnd   = aBegin + hA*(wA - 1); 
+	int aStep  = 8 * hA;  
 
-    int bBegin = 64 * bx; 
-    int bStep  = 8 * wB;
-    int wA8 = wA - 8;
+	int bBegin = 64 * bx; 
+	int bStep  = 8 * wB;
+	int wA8 = wA - 8;
 
 	A += aBegin + tid4*hA + (tid15<<2);
 	B += bBegin + tid4*wB + (tid15<<2);
@@ -211,23 +211,23 @@ sgemm_kernel_64(float *C, float *A, float *B, int hA, int wA, int wB)
 	int sh_a = ((tid4<<1) | (tid&1));//tid_y;
 	int sh_b = ((tid>>1) & 7) + 256;//tid_x + 256;
     
-    // shared memory double buffer
+	// shared memory double buffer
 	smem[sh_offs           ] = a1[0];
 	smem[sh_offs + 64      ] = a1[1];
 	smem[sh_offs      + 256] = b1[0];
 	smem[sh_offs + 64 + 256] = b1[1];
-    __syncthreads();
+	__syncthreads();
         
-    // 2nd prefetch from shared memory
+	// 2nd prefetch from shared memory
 	mFetchSmem(sh_a+0*16, sh_b+0*16, 0);//shared memory-->register, memory access
 
-    // main loop
-    for (int k = 0; k < wA; k += 8)
-    //for (int a = aBegin + aStep, b = bBegin + bStep; a <= aEnd; a += aStep, b += bStep)
-    {
+	// main loop
+	for (int k = 0; k < wA; k += 8)
+	//for (int a = aBegin + aStep, b = bBegin + bStep; a <= aEnd; a += aStep, b += bStep)
+	{
 		A += aStep;
 		B += bStep;
-    	sh_offs ^= 128;
+		sh_offs ^= 128;
 		
 		// 1st prefetch from global memory
 		if (k < wA8)
@@ -254,10 +254,10 @@ sgemm_kernel_64(float *C, float *A, float *B, int hA, int wA, int wB)
 		mFetchSmem(sh_a+7*16, sh_b+7*16, 1);//shared memory-->register, memory access
 		
 		// shift read index
-    	sh_a ^= 128;
-    	sh_b ^= 128;
+		sh_a ^= 128;
+		sh_b ^= 128;
         
-        // compute the last sub matrix
+		// compute the last sub matrix
 		mRank8x8(0);							  //register->register, compute
 		
 		// shared memory double buffer
@@ -270,7 +270,7 @@ sgemm_kernel_64(float *C, float *A, float *B, int hA, int wA, int wB)
 		}
 		
 		mRank8x8(1);							  //register->register, compute
-    	__syncthreads();
+		__syncthreads();
 		
 		// 2nd prefetch from shared memory
 		if (k < wA8)
@@ -308,7 +308,7 @@ sgemm_kernel_64(float *C, float *A, float *B, int hA, int wA, int wB)
 		st_gbl_cs((const float4 *)(C + C_index + (i + (i/4)*28 + 4)*wB), smem[tid15 + (tid4<<5)+16] );
 	}
 #else
-    int C_index = wB * 64 * by + tid_y * 8 * wB + 64 * bx + tid_x * 8;    
+	int C_index = wB * 64 * by + tid_y * 8 * wB + 64 * bx + tid_x * 8;    
 #pragma unroll
 	for (int i = 0; i < 8; i++)
 	{
